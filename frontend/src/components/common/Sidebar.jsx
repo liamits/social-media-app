@@ -29,6 +29,7 @@ function Sidebar() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
 
   // Fetch unread notification count
   useEffect(() => {
@@ -51,8 +52,19 @@ function Sidebar() {
     return () => socket.off('newNotification', handler);
   }, [socket]);
 
+  // Real-time new message badge
+  useEffect(() => {
+    if (!socket) return;
+    const handler = () => {
+      if (location.pathname !== '/messages') setUnreadMsgCount(prev => prev + 1);
+    };
+    socket.on('newMessage', handler);
+    return () => socket.off('newMessage', handler);
+  }, [socket, location.pathname]);
+
   useEffect(() => {
     if (location.pathname === '/notifications') setUnreadCount(0);
+    if (location.pathname === '/messages') setUnreadMsgCount(0);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -108,6 +120,11 @@ function Sidebar() {
                   <div className="nav-icon-wrapper">
                     <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
                     {unreadCount > 0 && <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+                  </div>
+                ) : item.label === 'Messages' ? (
+                  <div className="nav-icon-wrapper">
+                    <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
+                    {unreadMsgCount > 0 && <span className="notif-badge">{unreadMsgCount > 9 ? '9+' : unreadMsgCount}</span>}
                   </div>
                 ) : (
                   <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
