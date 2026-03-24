@@ -59,35 +59,34 @@ function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Listen for new messages
+  // Listen for new messages (incoming only - sent messages added via HTTP response)
   useEffect(() => {
     if (!socket) return;
+
     const handleNewMessage = (message) => {
       const msgSenderId = message.senderId?.toString();
-      const msgReceiverId = message.receiverId?.toString();
       const selectedId = selectedUser?._id?.toString();
-      const myId = currentUser?.id;
 
-      // Only add to UI if it's an incoming message (not sent by me, already added via HTTP)
-      if (msgSenderId !== myId && selectedUser && msgSenderId === selectedId) {
+      // Add to chat if conversation is open with this sender
+      if (selectedId && msgSenderId === selectedId) {
         setMessages(prev => [...prev, message]);
       }
 
       // Bubble conversation to top
       setConversations(prev => {
         const idx = prev.findIndex(c =>
-          c.otherParticipant?._id?.toString() === msgSenderId ||
-          c.otherParticipant?._id?.toString() === msgReceiverId
+          c.otherParticipant?._id?.toString() === msgSenderId
         );
-        if (idx === -1) return prev;
+        if (idx <= 0) return prev;
         const updated = [...prev];
         const [conv] = updated.splice(idx, 1);
         return [conv, ...updated];
       });
     };
+
     socket.on('newMessage', handleNewMessage);
     return () => socket.off('newMessage', handleNewMessage);
-  }, [socket, selectedUser, currentUser]);
+  }, [socket, selectedUser]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();

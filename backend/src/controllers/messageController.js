@@ -35,7 +35,14 @@ const sendMessage = async (req, res) => {
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       const io = req.app.get('io');
-      io.to(receiverSocketId).emit('newMessage', newMessage);
+      io.to(receiverSocketId).emit('newMessage', {
+        _id: newMessage._id,
+        senderId: newMessage.senderId.toString(),
+        receiverId: newMessage.receiverId.toString(),
+        message: newMessage.message,
+        createdAt: newMessage.createdAt,
+        updatedAt: newMessage.updatedAt,
+      });
     }
 
     res.status(201).json(newMessage);
