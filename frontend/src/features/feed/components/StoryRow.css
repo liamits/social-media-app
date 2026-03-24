@@ -253,3 +253,202 @@
 .story-avatar-container.user {
   background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
 }
+
+/* Story creator */
+.story-creator-inner {
+  position: relative;
+  width: 380px;
+  max-height: 90vh;
+  aspect-ratio: 9/16;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.story-creator-toolbar {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  z-index: 20;
+}
+
+.creator-toolbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+.creator-btn {
+  background: rgba(0,0,0,0.4);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Draggable text overlay */
+.story-text-overlay {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  cursor: grab;
+  white-space: pre-wrap;
+  text-align: center;
+  max-width: 80%;
+  z-index: 15;
+  line-height: 1.2;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.story-text-overlay:active {
+  cursor: grabbing;
+}
+
+/* Text input panel */
+.story-text-panel {
+  position: absolute;
+  bottom: 70px;
+  left: 12px;
+  right: 12px;
+  background: rgba(20,20,20,0.92);
+  border-radius: 12px;
+  padding: 12px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.story-text-input {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 15px;
+  padding: 8px 12px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.story-text-input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.text-style-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.color-swatches {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.color-swatch.active {
+  border-color: #fff;
+  transform: scale(1.2);
+}
+
+.font-size-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.font-size-row button {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.done-text-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #0095f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+/* Publish button */
+.story-publish-btn {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0095f6;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 10px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 20;
+  white-space: nowrap;
+}
+
+.story-publish-btn:hover {
+  background: #0081d6;
+}
+
+/* Uploading state */
+.story-uploading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #fff;
+  font-size: 15px;
+}
+
+.uploading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

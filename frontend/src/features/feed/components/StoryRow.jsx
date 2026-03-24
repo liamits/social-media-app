@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Eye, Trash2 } from 'lucide-react';
+import { Plus, X, Eye, Trash2, Type, Check } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { API } from '../../../utils/api';
 import './StoryRow.css';
+
+const TEXT_COLORS = ['#ffffff', '#000000', '#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#007aff', '#af52de'];
 
 function StoryRow() {
   const { user } = useAuth();
@@ -11,6 +13,20 @@ function StoryRow() {
   const [viewers, setViewers] = useState([]);
   const [showViewers, setShowViewers] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Story creator state
+  const [creatorStep, setCreatorStep] = useState(null); // null | 'editor' | 'uploading'
+  const [storyFile, setStoryFile] = useState(null);
+  const [storyPreview, setStoryPreview] = useState('');
+  const [storyText, setStoryText] = useState('');
+  const [textColor, setTextColor] = useState('#ffffff');
+  const [fontSize, setFontSize] = useState(24);
+  const [textPos, setTextPos] = useState({ x: 50, y: 50 });
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const editorRef = useRef();
+
   const fileInputRef = useRef();
   const timerRef = useRef();
 
@@ -25,26 +41,71 @@ function StoryRow() {
     } catch (err) { console.error(err); }
   };
 
-  const handleUpload = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setStoryFile(file);
+    setStoryPreview(URL.createObjectURL(file));
+    setStoryText('');
+    setTextPos({ x: 50, y: 50 });
+    setCreatorStep('editor');
+    e.target.value = '';
+  };
+
+  const handlePublish = async () => {
+    if (!storyFile) return;
+    setCreatorStep('uploading');
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', storyFile);
       const uploadRes = await fetch(API.upload, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
       const uploadJson = await uploadRes.json();
       const url = uploadJson.data?.url;
 
-      const storyRes = await fetch(API.stories.base, {
+      await fetch(API.stories.base, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ image: url }),
+        body: JSON.stringify({
+          image: url,
+          text: storyText,
+          textStyle: { color: textColor, fontSize, position: textPos },
+        }),
       });
-      if (storyRes.ok) fetchStories();
+      fetchStories();
     } catch (err) { console.error(err); }
+    setCreatorStep(null);
+    setStoryFile(null);
+    setStoryPreview('');
+    setStoryText('');
   };
 
+  // Drag text label
+  const handleTextMouseDown = (e) => {
+    e.preventDefault();
+    const rect = editorRef.current.getBoundingClientRect();
+    const labelX = (textPos.x / 100) * rect.width;
+    const labelY = (textPos.y / 100) * rect.height;
+    setDragOffset({ x: e.clientX - rect.left - labelX, y: e.clientY - rect.top - labelY });
+    setDragging(true);
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e) => {
+      const rect = editorRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const x = Math.min(100, Math.max(0, ((e.clientX - rect.left - dragOffset.x) / rect.width) * 100));
+      const y = Math.min(100, Math.max(0, ((e.clientY - rect.top - dragOffset.y) / rect.height) * 100));
+      setTextPos({ x, y });
+    };
+    const onUp = () => setDragging(false);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [dragging, dragOffset]);
+
+  // Viewer logic
   const openStory = (group, index = 0) => {
     setViewing({ group, index });
     setProgress(0);
@@ -127,7 +188,7 @@ function StoryRow() {
             <div className="add-story-badge"><Plus size={10} /></div>
           </div>
           <span className="story-username">Your story</span>
-          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelect} />
         </div>
 
         {groups.map(group => {
@@ -145,6 +206,87 @@ function StoryRow() {
         })}
       </div>
 
+      {/* Story Creator */}
+      {creatorStep === 'editor' && (
+        <div className="story-modal">
+          <div className="story-creator-inner" ref={editorRef}>
+            <img src={storyPreview} alt="story preview" className="story-img" />
+
+            {/* Draggable text overlay */}
+            {storyText ? (
+              <div
+                className="story-text-overlay"
+                style={{ left: `${textPos.x}%`, top: `${textPos.y}%`, color: textColor, fontSize: `${fontSize}px` }}
+                onMouseDown={handleTextMouseDown}
+              >
+                {storyText}
+              </div>
+            ) : null}
+
+            {/* Top toolbar */}
+            <div className="story-creator-toolbar">
+              <button className="creator-btn" onClick={() => { setCreatorStep(null); setStoryPreview(''); }}>
+                <X size={24} color="white" />
+              </button>
+              <div className="creator-toolbar-right">
+                <button className="creator-btn" onClick={() => setShowTextInput(v => !v)} title="Add text">
+                  <Type size={22} color="white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Text input panel */}
+            {showTextInput && (
+              <div className="story-text-panel" onClick={e => e.stopPropagation()}>
+                <input
+                  className="story-text-input"
+                  placeholder="Type something..."
+                  value={storyText}
+                  onChange={e => setStoryText(e.target.value)}
+                  maxLength={150}
+                  autoFocus
+                />
+                <div className="text-style-row">
+                  <div className="color-swatches">
+                    {TEXT_COLORS.map(c => (
+                      <button
+                        key={c}
+                        className={`color-swatch ${textColor === c ? 'active' : ''}`}
+                        style={{ background: c }}
+                        onClick={() => setTextColor(c)}
+                      />
+                    ))}
+                  </div>
+                  <div className="font-size-row">
+                    <button onClick={() => setFontSize(s => Math.max(12, s - 4))}>A-</button>
+                    <span>{fontSize}px</span>
+                    <button onClick={() => setFontSize(s => Math.min(60, s + 4))}>A+</button>
+                  </div>
+                </div>
+                <button className="done-text-btn" onClick={() => setShowTextInput(false)}>
+                  <Check size={16} /> Done
+                </button>
+              </div>
+            )}
+
+            {/* Publish button */}
+            <button className="story-publish-btn" onClick={handlePublish}>
+              Share story
+            </button>
+          </div>
+        </div>
+      )}
+
+      {creatorStep === 'uploading' && (
+        <div className="story-modal">
+          <div className="story-uploading">
+            <div className="uploading-spinner" />
+            <p>Sharing story...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Story viewer modal */}
       {viewing && currentStory && (
         <div className="story-modal" onClick={closeStory}>
           <div className="story-modal-inner" onClick={e => e.stopPropagation()}>
@@ -178,6 +320,23 @@ function StoryRow() {
             </div>
 
             <img src={currentStory.image} alt="story" className="story-img" />
+
+            {/* Render text overlay on viewer */}
+            {currentStory.text && (
+              <div
+                className="story-text-overlay"
+                style={{
+                  left: `${currentStory.textStyle?.position?.x ?? 50}%`,
+                  top: `${currentStory.textStyle?.position?.y ?? 50}%`,
+                  color: currentStory.textStyle?.color || '#fff',
+                  fontSize: `${currentStory.textStyle?.fontSize || 24}px`,
+                  pointerEvents: 'none',
+                }}
+              >
+                {currentStory.text}
+              </div>
+            )}
+
             <div className="story-nav-left" onClick={prevStory} />
             <div className="story-nav-right" onClick={nextStory} />
 

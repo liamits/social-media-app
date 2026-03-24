@@ -5,8 +5,8 @@ const ApiError = require('../common/utils/ApiError');
 const { sendResponse } = require('../common/utils/response');
 
 const createStory = catchAsync(async (req, res) => {
-  const { image } = req.body;
-  const story = await Story.create({ user: req.user.id, image });
+  const { image, text, textStyle } = req.body;
+  const story = await Story.create({ user: req.user.id, image, text, textStyle });
   await story.populate('user', 'username avatar');
   sendResponse(res, 201, story);
 });
