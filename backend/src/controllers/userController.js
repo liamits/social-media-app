@@ -94,4 +94,18 @@ const getSuggestions = catchAsync(async (req, res) => {
   sendResponse(res, 200, users);
 });
 
-module.exports = { getUserProfile, followUnfollowUser, searchUsers, updateProfile, getUserById, getSuggestions };
+const getFollowers = catchAsync(async (req, res) => {
+  if (req.params.id !== req.user.id) throw new ApiError(403, 'Unauthorized');
+  const user = await User.findById(req.params.id).populate('followers', 'username avatar fullName');
+  if (!user) throw new ApiError(404, 'User not found');
+  sendResponse(res, 200, user.followers);
+});
+
+const getFollowing = catchAsync(async (req, res) => {
+  if (req.params.id !== req.user.id) throw new ApiError(403, 'Unauthorized');
+  const user = await User.findById(req.params.id).populate('following', 'username avatar fullName');
+  if (!user) throw new ApiError(404, 'User not found');
+  sendResponse(res, 200, user.following);
+});
+
+module.exports = { getUserProfile, followUnfollowUser, searchUsers, updateProfile, getUserById, getSuggestions, getFollowers, getFollowing };

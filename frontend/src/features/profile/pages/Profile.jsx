@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { API } from '../../../utils/api';
 import EditProfileModal from '../components/EditProfileModal';
 import PostModal from '../../../components/common/PostModal';
+import FollowListModal from '../../../components/common/FollowListModal';
 import './Profile.css';
 import '../../explore/pages/Grid.css';
 
@@ -20,6 +21,7 @@ function Profile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [followModal, setFollowModal] = useState(null); // 'followers' | 'following' | null
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -114,8 +116,21 @@ function Profile() {
           </div>
           <div className="profile-stats">
             <span><strong>{postCount}</strong> posts</span>
-            <span><strong>{followersCount}</strong> followers</span>
-            <span><strong>{followingCount}</strong> following</span>
+            {isOwnProfile ? (
+              <>
+                <button className="profile-stat-btn" onClick={() => setFollowModal('followers')}>
+                  <strong>{followersCount}</strong> followers
+                </button>
+                <button className="profile-stat-btn" onClick={() => setFollowModal('following')}>
+                  <strong>{followingCount}</strong> following
+                </button>
+              </>
+            ) : (
+              <>
+                <span><strong>{followersCount}</strong> followers</span>
+                <span><strong>{followingCount}</strong> following</span>
+              </>
+            )}
           </div>
           <div className="profile-bio">
             <p className="full-name">{user.fullName || user.username}</p>
@@ -173,6 +188,14 @@ function Profile() {
           post={selectedPost}
           onClose={() => setSelectedPost(null)}
           onDelete={(id) => { setPosts(prev => prev.filter(p => p._id !== id)); setSelectedPost(null); }}
+        />
+      )}
+
+      {followModal && (
+        <FollowListModal
+          userId={user._id}
+          type={followModal}
+          onClose={() => setFollowModal(null)}
         />
       )}
     </div>
