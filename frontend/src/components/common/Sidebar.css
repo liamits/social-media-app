@@ -13,6 +13,19 @@
   z-index: 1000;
 }
 
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-label {
+  display: none;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+}
+
 .sidebar-logo {
   padding: 25px 12px 35px;
   display: flex;

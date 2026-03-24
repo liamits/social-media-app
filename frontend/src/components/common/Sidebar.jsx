@@ -56,7 +56,7 @@ function Sidebar() {
 
   return (
     <>
-      <aside className="sidebar">
+      <aside className={`sidebar ${showSearch ? 'collapsed' : ''}`}>
         <Link to="/" className="sidebar-logo">
           <Instagram size={24} className="logo-icon" />
           <span className="logo-text">Instagram</span>
