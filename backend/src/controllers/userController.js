@@ -118,10 +118,26 @@ const getUserById = async (req, res) => {
   }
 };
 
+const getSuggestions = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user.id).select('following');
+    const excludeIds = [...currentUser.following, req.user.id];
+
+    const users = await User.find({ _id: { $nin: excludeIds } })
+      .select('username fullName avatar')
+      .limit(5);
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching suggestions' });
+  }
+};
+
 module.exports = {
   getUserProfile,
   followUnfollowUser,
   searchUsers,
   updateProfile,
-  getUserById
+  getUserById,
+  getSuggestions
 };

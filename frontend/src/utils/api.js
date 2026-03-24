@@ -13,6 +13,7 @@ export const API = {
   },
   users: {
     search: (q) => `${BASE_URL}/api/users/search?q=${q}`,
+    suggestions: `${BASE_URL}/api/users/suggestions`,
     profile: (username) => `${BASE_URL}/api/users/profile/${username}`,
     profileById: (id) => `${BASE_URL}/api/users/profile/id/${id}`,
     follow: (id) => `${BASE_URL}/api/users/follow/${id}`,
