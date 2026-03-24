@@ -15,7 +15,8 @@ function FollowListModal({ userId, type, onClose }) {
         const url = type === 'followers' ? API.users.followers(userId) : API.users.following(userId);
         const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
         const json = await res.json();
-        if (res.ok) setList(json.data);
+        console.log('[FollowListModal] url:', url, 'status:', res.status, 'json:', json);
+        if (res.ok) setList(json.data || []);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };

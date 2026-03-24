@@ -12,6 +12,7 @@ function Post({ post, onDelete, savedPostIds = [] }) {
   const [isLiked, setIsLiked] = useState(post.likes?.includes(user?.id));
   const [isSaved, setIsSaved] = useState(savedPostIds.includes(post._id));
   const [showMenu, setShowMenu] = useState(false);
+  const [showHeartAnim, setShowHeartAnim] = useState(false);
   const menuRef = useRef();
 
   const isOwner = user?.id === post.user?._id?.toString() || user?.id === post.user?.id;
@@ -24,6 +25,12 @@ function Post({ post, onDelete, savedPostIds = [] }) {
 
   const formatDate = (d) =>
     new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase();
+
+  const handleDoubleTap = () => {
+    if (!isLiked) toggleLike();
+    setShowHeartAnim(true);
+    setTimeout(() => setShowHeartAnim(false), 900);
+  };
 
   const toggleLike = async () => {
     const wasLiked = isLiked;
@@ -111,8 +118,9 @@ function Post({ post, onDelete, savedPostIds = [] }) {
         )}
       </header>
 
-      <div className="post-image" onDoubleClick={toggleLike}>
+      <div className="post-image" onDoubleClick={handleDoubleTap}>
         <img src={post.image} alt="Post content" />
+        {showHeartAnim && <div className="heart-anim">❤️</div>}
       </div>
 
       <div className="post-actions">

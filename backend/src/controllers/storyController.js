@@ -15,7 +15,7 @@ const getStories = catchAsync(async (req, res) => {
   const user = await User.findById(req.user.id);
   const ids = [...user.following, user._id];
 
-  const stories = await Story.find({ user: { $in: ids } })
+  const stories = await Story.find({ user: { $in: ids }, expiresAt: { $gt: new Date() } })
     .populate('user', 'username avatar')
     .sort({ createdAt: -1 });
 

@@ -25,18 +25,29 @@ const getFeed = catchAsync(async (req, res) => {
   const user = await User.findById(req.user.id);
   if (!user) throw new ApiError(404, 'User not found');
 
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const skip = (page - 1) * limit;
+
   const followingIds = [...user.following, user._id];
+  const query = user.following.length > 0 ? { user: { $in: followingIds } } : {};
 
-  // If following no one, return all posts (cold start)
-  const query = user.following.length > 0
-    ? { user: { $in: followingIds } }
-    : {};
+  const [posts, total] = await Promise.all([
+    Post.find(query)
+      .populate('user', 'username avatar fullName')
+      .populate('comments.user', 'username avatar')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Post.countDocuments(query),
+  ]);
 
-  const posts = await Post.find(query)
-    .populate('user', 'username avatar fullName')
-    .populate('comments.user', 'username avatar')
-    .sort({ createdAt: -1 });
-  sendResponse(res, 200, posts);
+  sendResponse(res, 200, posts, undefined, {
+    page,
+    limit,
+    total,
+    hasMore: skip + posts.length < total,
+  });
 });
 
 const likePost = catchAsync(async (req, res) => {

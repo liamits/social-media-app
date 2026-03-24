@@ -17,3 +17,25 @@
     margin-right: 0;
   }
 }
+
+.feed-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+.feed-loading-more {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.feed-end {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 8px;
+}
