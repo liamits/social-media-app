@@ -10,9 +10,16 @@ function Feed() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/posts');
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/posts/feed', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const data = await response.json();
-        setPosts(data);
+        if (response.ok) {
+          setPosts(data);
+        }
       } catch (err) {
         console.error('Error fetching posts:', err);
       } finally {
