@@ -15,11 +15,42 @@ function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
-// ... existing fetch logic ...
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`http://localhost:5000/api/users/profile/${username}`);
+        const data = await response.json();
+        if (response.ok) {
+          setProfileData(data);
+          setIsFollowing(data.user.followers.includes(currentUser?.id));
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
   }, [username, currentUser?.id]);
 
   const handleFollow = async () => {
-// ... existing follow logic ...
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/users/follow/${profileData.user._id}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setIsFollowing(!isFollowing);
+        setProfileData(prev => ({
+          ...prev,
+          followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1
+        }));
+      }
+    } catch (err) {
+      console.error('Error toggling follow:', err);
+    }
   };
 
   const handleProfileUpdate = (updatedUser) => {
@@ -56,24 +87,27 @@ function Profile() {
                 <Settings size={20} className="settings-icon" />
               </>
             ) : (
-// ... existing follow button ...
+              <button 
+                className={`follow-btn ${isFollowing ? 'unfollow' : ''}`}
+                onClick={handleFollow}
+              >
+                {isFollowing ? 'Unfollow' : 'Follow'}
+              </button>
             )}
           </div>
-// ... existing stats and bio ...
+
+          <div className="profile-stats">
+            <span><strong>{postCount}</strong> posts</span>
+            <span><strong>{followersCount}</strong> followers</span>
+            <span><strong>{followingCount}</strong> following</span>
+          </div>
+
+          <div className="profile-bio">
+            <p className="full-name">{user.fullName || user.username}</p>
+            <p className="bio-text">{user.bio}</p>
+          </div>
         </section>
       </header>
-
-// ... existing tabs and grid ...
-
-      <EditProfileModal 
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        user={user}
-        onUpdate={handleProfileUpdate}
-      />
-    </div>
-  );
-}
 
       <div className="profile-tabs">
         <button className="tab active"><Grid size={12} /> POSTS</button>
@@ -98,6 +132,13 @@ function Profile() {
           </div>
         )}
       </div>
+
+      <EditProfileModal 
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        user={user}
+        onUpdate={handleProfileUpdate}
+      />
     </div>
   );
 }
