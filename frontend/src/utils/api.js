@@ -24,5 +24,6 @@ export const API = {
     get: (id) => `${BASE_URL}/api/messages/${id}`,
     send: (id) => `${BASE_URL}/api/messages/send/${id}`,
   },
+  upload: `${BASE_URL}/api/upload`,
   socketUrl: BASE_URL,
 };

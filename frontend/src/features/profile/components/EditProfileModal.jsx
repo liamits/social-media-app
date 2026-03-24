@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Camera } from 'lucide-react';
 import { API } from '../../../utils/api';
 import './EditProfileModal.css';
 
 function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
   const [fullName, setFullName] = useState(user.fullName || '');
   const [bio, setBio] = useState(user.bio || '');
-  const [avatar, setAvatar] = useState(user.avatar || '');
+  const [avatarPreview, setAvatarPreview] = useState(user.avatar || '');
+  const [avatarFile, setAvatarFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef();
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,13 +26,26 @@ function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
 
     try {
       const token = localStorage.getItem('token');
+      let avatarUrl = user.avatar;
+
+      // Upload new avatar if selected
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append('image', avatarFile);
+        const uploadRes = await fetch(API.upload, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) throw new Error(uploadData.message || 'Upload failed');
+        avatarUrl = uploadData.url;
+      }
+
       const response = await fetch(API.users.update, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ fullName, bio, avatar })
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ fullName, bio, avatar: avatarUrl }),
       });
 
       const data = await response.json();
@@ -34,7 +56,7 @@ function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
         setError(data.message);
       }
     } catch (err) {
-      setError('Failed to update profile');
+      setError(err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -52,34 +74,25 @@ function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
         </header>
 
         <form onSubmit={handleSubmit} className="edit-form">
-          <div className="form-group">
-            <label>Name</label>
-            <input 
-              type="text" 
-              value={fullName} 
-              onChange={e => setFullName(e.target.value)}
-              placeholder="Full Name"
-            />
+          <div className="avatar-upload-section">
+            <div className="avatar-preview-wrapper" onClick={() => fileInputRef.current.click()}>
+              <img src={avatarPreview} alt="avatar" className="avatar-preview" />
+              <div className="avatar-overlay"><Camera size={20} /></div>
+            </div>
+            <button type="button" className="change-photo-btn" onClick={() => fileInputRef.current.click()}>
+              Change photo
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
           </div>
 
           <div className="form-group">
-            <label>Avatar URL</label>
-            <input 
-              type="text" 
-              value={avatar} 
-              onChange={e => setAvatar(e.target.value)}
-              placeholder="Image URL"
-            />
+            <label>Name</label>
+            <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Full Name" />
           </div>
 
           <div className="form-group">
             <label>Bio</label>
-            <textarea 
-              value={bio} 
-              onChange={e => setBio(e.target.value)}
-              placeholder="Bio"
-              maxLength={150}
-            />
+            <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Bio" maxLength={150} />
             <span className="char-count">{bio.length}/150</span>
           </div>
 
