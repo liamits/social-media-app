@@ -1,0 +1,19 @@
+.feed {
+  flex: 1;
+  max-width: 630px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 1263px) {
+  .feed {
+    margin-right: 0;
+  }
+}

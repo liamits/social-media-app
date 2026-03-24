@@ -1,0 +1,78 @@
+.suggestions {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  padding-top: 24px;
+}
+
+.user-profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.profile-avatar-large {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.username-main {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.full-name {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.switch-btn, .follow-link, .see-all-btn {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.suggestions-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.suggestions-header span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.suggestion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.suggestion-item .post-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.suggestions-footer {
+  margin-top: 32px;
+  font-size: 12px;
+  color: #c7c7c7;
+  line-height: 1.4;
+}
+
+.copyright {
+  margin-top: 16px;
+  text-transform: uppercase;
+}
