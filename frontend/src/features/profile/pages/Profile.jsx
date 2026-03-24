@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Settings, Grid, Bookmark, UserSquare, Trash2 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { API } from '../../../utils/api';
@@ -12,6 +12,7 @@ function Profile() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [profileData, setProfileData] = useState(null);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -24,6 +25,7 @@ function Profile() {
         const data = await response.json();
         if (response.ok) {
           setProfileData(data);
+          setPosts(data.posts || []);
           setIsFollowing(data.user.followers.includes(currentUser?.id));
         }
       } catch (err) {
@@ -32,7 +34,6 @@ function Profile() {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [username, currentUser?.id]);
 
@@ -41,7 +42,7 @@ function Profile() {
       const token = localStorage.getItem('token');
       const response = await fetch(API.users.follow(profileData.user._id), {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
         setIsFollowing(!isFollowing);
@@ -51,23 +52,13 @@ function Profile() {
         }));
       }
     } catch (err) {
-      console.error('Error toggling follow:', err);
+      console.error(err);
     }
   };
 
   const handleProfileUpdate = (updatedUser) => {
-    setProfileData(prev => ({
-      ...prev,
-      user: updatedUser
-    }));
+    setProfileData(prev => ({ ...prev, user: updatedUser }));
   };
-
-  if (loading) return <div className="profile-loading">Loading profile...</div>;
-  if (!profileData) return <div className="profile-error">User not found</div>;
-
-  const { user, posts: initialPosts, postCount, followersCount, followingCount } = profileData;
-  const [posts, setPosts] = useState(initialPosts);
-  const isOwnProfile = currentUser?.username === username;
 
   const handleDeletePost = async (postId) => {
     if (!window.confirm('Delete this post?')) return;
@@ -78,50 +69,42 @@ function Profile() {
     } catch (err) { console.error(err); }
   };
 
+  if (loading) return <div className="profile-loading">Loading profile...</div>;
+  if (!profileData) return <div className="profile-error">User not found</div>;
+
+  const { user, postCount, followersCount, followingCount } = profileData;
+  const isOwnProfile = currentUser?.username === username;
+
   return (
     <div className="profile-page">
       <header className="profile-header">
         <div className="profile-avatar-xl">
-          <img src={user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Default"} alt="Profile" />
+          <img src={user.avatar} alt="Profile" />
         </div>
-        
         <section className="profile-details">
           <div className="profile-top-row">
             <h2 className="profile-username">{user.username}</h2>
             {isOwnProfile ? (
               <>
-                <button 
-                  className="edit-profile-btn"
-                  onClick={() => setShowEditModal(true)}
-                >
-                  Edit profile
-                </button>
+                <button className="edit-profile-btn" onClick={() => setShowEditModal(true)}>Edit profile</button>
                 <Settings size={20} className="settings-icon" />
               </>
             ) : (
               <div className="profile-actions">
-                <button 
-                  className={`follow-btn ${isFollowing ? 'unfollow' : ''}`}
-                  onClick={handleFollow}
-                >
+                <button className={`follow-btn ${isFollowing ? 'unfollow' : ''}`} onClick={handleFollow}>
                   {isFollowing ? 'Unfollow' : 'Follow'}
                 </button>
-                <button 
-                  className="msg-btn"
-                  onClick={() => navigate(`/messages?userId=${user._id}`)}
-                >
+                <button className="msg-btn" onClick={() => navigate(`/messages?userId=${user._id}`)}>
                   Message
                 </button>
               </div>
             )}
           </div>
-
           <div className="profile-stats">
             <span><strong>{postCount}</strong> posts</span>
             <span><strong>{followersCount}</strong> followers</span>
             <span><strong>{followingCount}</strong> following</span>
           </div>
-
           <div className="profile-bio">
             <p className="full-name">{user.fullName || user.username}</p>
             <p className="bio-text">{user.bio}</p>
@@ -152,13 +135,11 @@ function Profile() {
             </div>
           ))
         ) : (
-          <div className="no-posts-grid">
-            <p>No posts yet.</p>
-          </div>
+          <div className="no-posts-grid"><p>No posts yet.</p></div>
         )}
       </div>
 
-      <EditProfileModal 
+      <EditProfileModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         user={user}
