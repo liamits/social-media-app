@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSocket } from '../../../context/SocketContext';
+import { useAuth } from '../../../context/AuthContext';
 import { Info, Image as ImageIcon, Heart, Smile, MessageCircle } from 'lucide-react';
 import { API } from '../../../utils/api';
 import './Chat.css';
@@ -15,6 +16,7 @@ function Chat() {
   const [conversations, setConversations] = useState([]);
   const [loadingConv, setLoadingConv] = useState(true);
   const { socket, onlineUsers } = useSocket();
+  const { user: currentUser } = useAuth();
   const messagesEndRef = useRef(null);
 
   // Fetch selected user info if from query or when changed
@@ -61,13 +63,21 @@ function Chat() {
   useEffect(() => {
     if (!socket) return;
     const handleNewMessage = (message) => {
-      if (selectedUser && (message.senderId === selectedUser._id?.toString() || message.senderId === selectedUser._id)) {
+      const msgSenderId = message.senderId?.toString();
+      const msgReceiverId = message.receiverId?.toString();
+      const selectedId = selectedUser?._id?.toString();
+      const myId = currentUser?.id;
+
+      // Only add to UI if it's an incoming message (not sent by me, already added via HTTP)
+      if (msgSenderId !== myId && selectedUser && msgSenderId === selectedId) {
         setMessages(prev => [...prev, message]);
       }
-      // Update conversation list to bubble up latest
+
+      // Bubble conversation to top
       setConversations(prev => {
         const idx = prev.findIndex(c =>
-          c.otherParticipant?._id?.toString() === message.senderId?.toString()
+          c.otherParticipant?._id?.toString() === msgSenderId ||
+          c.otherParticipant?._id?.toString() === msgReceiverId
         );
         if (idx === -1) return prev;
         const updated = [...prev];
@@ -77,7 +87,7 @@ function Chat() {
     };
     socket.on('newMessage', handleNewMessage);
     return () => socket.off('newMessage', handleNewMessage);
-  }, [socket, selectedUser]);
+  }, [socket, selectedUser, currentUser]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -179,7 +189,7 @@ function Chat() {
             
             <div className="messages-area">
               {messages.map((msg, i) => (
-                <div key={i} className={`message-bubble ${msg.senderId === selectedUser._id ? 'received' : 'sent'}`}>
+                <div key={msg._id || i} className={`message-bubble ${msg.senderId?.toString() === currentUser?.id ? 'sent' : 'received'}`}>
                   {msg.message}
                 </div>
               ))}
