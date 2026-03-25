@@ -100,12 +100,16 @@ function Profile() {
             <h2 className="profile-username">{user.username}</h2>
             {isOwnProfile ? (
               <>
-                <button className="edit-profile-btn" onClick={() => setShowEditModal(true)}>Edit profile</button>
+                <button className="edit-profile-btn" onClick={() => setShowEditModal(true)} data-test-id="profile-edit-btn">Edit profile</button>
                 <Settings size={20} className="settings-icon" />
               </>
             ) : (
               <div className="profile-actions">
-                <button className={`follow-btn ${isFollowing ? 'unfollow' : ''}`} onClick={handleFollow}>
+                <button 
+                  className={`follow-btn ${isFollowing ? 'unfollow' : ''}`} 
+                  onClick={handleFollow}
+                  data-test-id="profile-follow-btn"
+                >
                   {isFollowing ? 'Unfollow' : 'Follow'}
                 </button>
                 <button className="msg-btn" onClick={() => navigate(`/messages?userId=${user._id}`)}>
@@ -140,7 +144,7 @@ function Profile() {
       </header>
 
       <div className="profile-tabs">
-        <button className={`tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')}>
+        <button className={`tab ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => setActiveTab('posts')} data-test-id="profile-posts-tab">
           <Grid size={12} /> POSTS
         </button>
         {isOwnProfile && (

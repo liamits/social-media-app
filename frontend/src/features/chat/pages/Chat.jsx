@@ -112,6 +112,7 @@ function Chat() {
                   key={conv._id}
                   className={`conv-item ${selectedUser?._id === other._id ? 'active' : ''}`}
                   onClick={() => setSelectedUser(other)}
+                  data-test-id="chat-conv-item"
                 >
                   <div className="conv-avatar-wrapper">
                     <img src={other.avatar} alt={other.username} className="conv-avatar" />
@@ -165,9 +166,10 @@ function Chat() {
                 placeholder="Message..."
                 value={newMessage}
                 onChange={e => setNewMessage(e.target.value)}
+                data-test-id="chat-message-input"
               />
               {newMessage.trim() ? (
-                <button type="submit" className="send-btn">Send</button>
+                <button type="submit" className="send-btn" data-test-id="chat-send-btn">Send</button>
               ) : (
                 <div className="input-icons">
                   <ImageIcon size={24} />

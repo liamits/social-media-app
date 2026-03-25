@@ -38,12 +38,14 @@ function Signup() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            data-test-id="signup-email-input"
           />
           <input 
             type="text" 
             placeholder="Full Name" 
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+            data-test-id="signup-fullname-input"
           />
           <input 
             type="text" 
@@ -51,6 +53,7 @@ function Signup() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            data-test-id="signup-username-input"
           />
           <input 
             type="password" 
@@ -58,10 +61,11 @@ function Signup() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            data-test-id="signup-password-input"
           />
-          <button type="submit" className="login-btn">Sign up</button>
+          <button type="submit" className="login-btn" data-test-id="signup-submit-btn">Sign up</button>
         </form>
-        {error && <p className="auth-error">{error}</p>}
+        {error && <p className="auth-error" data-test-id="signup-error-msg">{error}</p>}
       </div>
 
       <div className="auth-box sub-box">

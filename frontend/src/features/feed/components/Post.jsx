@@ -125,13 +125,13 @@ function Post({ post, onDelete, savedPostIds = [] }) {
 
       <div className="post-actions">
         <div className="post-actions-left">
-          <button className={`action-btn ${isLiked ? 'liked' : ''}`} onClick={toggleLike}>
+          <button className={`action-btn ${isLiked ? 'liked' : ''}`} onClick={toggleLike} data-test-id="post-like-btn">
             <Heart size={24} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
-          <button className="action-btn"><MessageCircle size={24} /></button>
+          <button className="action-btn" data-test-id="post-comment-btn"><MessageCircle size={24} /></button>
           <button className="action-btn"><Send size={24} /></button>
         </div>
-        <button className={`action-btn ${isSaved ? 'saved' : ''}`} onClick={toggleSave}>
+        <button className={`action-btn ${isSaved ? 'saved' : ''}`} onClick={toggleSave} data-test-id="post-save-btn">
           <Bookmark size={24} fill={isSaved ? 'currentColor' : 'none'} />
         </button>      </div>
 
@@ -166,8 +166,9 @@ function Post({ post, onDelete, savedPostIds = [] }) {
           placeholder="Add a comment..."
           value={commentText}
           onChange={e => setCommentText(e.target.value)}
+          data-test-id="post-comment-input"
         />
-        <button type="submit" className="post-btn" disabled={!commentText.trim()}>Post</button>
+        <button type="submit" className="post-btn" disabled={!commentText.trim()} data-test-id="post-comment-submit-btn">Post</button>
       </form>
     </article>
   );

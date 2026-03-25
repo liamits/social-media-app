@@ -108,7 +108,7 @@ function Sidebar() {
             const content = (
               <>
                 {item.icon === 'profile' ? (
-                  <div className="profile-avatar-mini-wrapper">
+                  <div className="profile-avatar-mini-wrapper" data-test-id="sidebar-profile-link">
                     <div className="profile-avatar-mini">
                       <img src={user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="Profile" />
                     </div>
@@ -117,17 +117,19 @@ function Sidebar() {
                     )}
                   </div>
                 ) : item.label === 'Notifications' ? (
-                  <div className="nav-icon-wrapper">
+                  <div className="nav-icon-wrapper" data-test-id="sidebar-notifications-link">
                     <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
                     {unreadCount > 0 && <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
                   </div>
                 ) : item.label === 'Messages' ? (
-                  <div className="nav-icon-wrapper">
+                  <div className="nav-icon-wrapper" data-test-id="sidebar-messages-link">
                     <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
                     {unreadMsgCount > 0 && <span className="notif-badge">{unreadMsgCount > 9 ? '9+' : unreadMsgCount}</span>}
                   </div>
                 ) : (
-                  <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
+                  <div data-test-id={`sidebar-${item.label?.toLowerCase()}-link`}>
+                    <item.icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
+                  </div>
                 )}
                 <span className="nav-label">{item.label}</span>
               </>

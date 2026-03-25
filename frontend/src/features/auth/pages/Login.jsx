@@ -31,6 +31,7 @@ function Login() {
             value={emailOrUsername}
             onChange={(e) => setEmailOrUsername(e.target.value)}
             required
+            data-test-id="login-email-input"
           />
           <input 
             type="password" 
@@ -38,10 +39,11 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            data-test-id="login-password-input"
           />
-          <button type="submit" className="login-btn">Log in</button>
+          <button type="submit" className="login-btn" data-test-id="login-submit-btn">Log in</button>
         </form>
-        {error && <p className="auth-error">{error}</p>}
+        {error && <p className="auth-error" data-test-id="login-error-msg">{error}</p>}
         <div className="divider">
           <span>OR</span>
         </div>

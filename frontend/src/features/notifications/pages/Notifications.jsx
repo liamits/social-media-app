@@ -58,7 +58,7 @@ function Notifications() {
       ) : (
         <div className="notif-list">
           {notifications.map(notif => (
-            <div key={notif._id} className={`notif-item ${!notif.read ? 'unread' : ''}`}>
+            <div key={notif._id} className={`notif-item ${!notif.read ? 'unread' : ''}`} data-test-id="notif-item">
               <Link to={`/profile/${notif.sender?.username}`}>
                 <img src={notif.sender?.avatar} alt={notif.sender?.username} className="notif-avatar" />
               </Link>
