@@ -1,5 +1,7 @@
 const Story = require('../models/Story');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
+const { getReceiverSocketId } = require('../socket/socket');
 const catchAsync = require('../common/catchAsync');
 const ApiError = require('../common/ApiError');
 const { sendResponse } = require('../common/response');
@@ -73,4 +75,33 @@ const deleteStory = catchAsync(async (req, res) => {
   sendResponse(res, 200, null, 'Story deleted');
 });
 
-module.exports = { createStory, getStories, viewStory, getViewers, deleteStory };
+const toggleStoryLike = catchAsync(async (req, res) => {
+  const story = await Story.findById(req.params.id);
+  if (!story) throw new ApiError(404, 'Story not found');
+
+  const isLiked = story.likes.includes(req.user.id);
+  if (isLiked) {
+    story.likes = story.likes.filter(id => id.toString() !== req.user.id);
+  } else {
+    story.likes.push(req.user.id);
+    if (story.user.toString() !== req.user.id) {
+      const notif = await Notification.create({
+        recipient: story.user,
+        sender: req.user.id,
+        type: 'like',
+        text: 'liked your story'
+      });
+      const io = req.app.get('io');
+      const socketId = getReceiverSocketId(story.user.toString());
+      if (socketId) {
+        const populated = await notif.populate('sender', 'username avatar');
+        io.to(socketId).emit('newNotification', populated);
+      }
+    }
+  }
+
+  await story.save();
+  sendResponse(res, 200, story.likes);
+});
+
+module.exports = { createStory, getStories, viewStory, getViewers, deleteStory, toggleStoryLike };

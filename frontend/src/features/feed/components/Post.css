@@ -326,3 +326,38 @@
 .comment-tag-badge button:hover {
   color: #ed4956;
 }
+.comment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.comment-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-like-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.comment-like-btn.liked {
+  color: #ed4956;
+}
+
+.comment-like-btn:hover {
+  transform: scale(1.1);
+}

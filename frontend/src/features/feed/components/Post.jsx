@@ -88,6 +88,22 @@ function Post({ post, onDelete, savedPostIds = [] }) {
     } catch (err) { console.error(err); }
   };
 
+  const handleCommentLike = async (commentId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(API.posts.likeComment(post._id, commentId), {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setComments(prev => prev.map(c => 
+          c._id === commentId ? { ...c, likes: json.data } : c
+        ));
+      }
+    } catch (err) { console.error(err); }
+  };
+
   const toggleSave = async () => {
     const prev = isSaved;
     setIsSaved(!prev);
@@ -173,11 +189,20 @@ function Post({ post, onDelete, savedPostIds = [] }) {
                     ))}
                   </span>
                 )}
-                {(user?.id === comment.user?._id?.toString() || isOwner) && (
-                  <button className="delete-comment-btn" onClick={() => handleDeleteComment(comment._id)}>
-                    <Trash2 size={12} />
+                <div className="comment-actions">
+                  <button 
+                    className={`comment-like-btn ${comment.likes?.includes(user?.id || user?._id) ? 'liked' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); handleCommentLike(comment._id); }}
+                  >
+                    <Heart size={12} fill={comment.likes?.includes(user?.id || user?._id) ? 'currentColor' : 'none'} />
+                    {comment.likes?.length > 0 && <span>{comment.likes.length}</span>}
                   </button>
-                )}
+                  {(user?.id === comment.user?._id?.toString() || isOwner) && (
+                    <button className="delete-comment-btn" onClick={() => handleDeleteComment(comment._id)}>
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
             {comments.length > 2 && (

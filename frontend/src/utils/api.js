@@ -14,6 +14,7 @@ export const API = {
     comment: (id) => `${BASE_URL}/api/posts/${id}/comment`,
     delete: (id) => `${BASE_URL}/api/posts/${id}`,
     deleteComment: (postId, commentId) => `${BASE_URL}/api/posts/${postId}/comment/${commentId}`,
+    likeComment: (postId, commentId) => `${BASE_URL}/api/posts/${postId}/like/${commentId}`,
   },
   users: {
     search: (q) => `${BASE_URL}/api/users/search?q=${q}`,
@@ -40,6 +41,7 @@ export const API = {
     base: `${BASE_URL}/api/stories`,
     view: (id) => `${BASE_URL}/api/stories/${id}/view`,
     viewers: (id) => `${BASE_URL}/api/stories/${id}/viewers`,
+    like: (id) => `${BASE_URL}/api/stories/${id}/like`,
     delete: (id) => `${BASE_URL}/api/stories/${id}`,
   },
   upload: `${BASE_URL}/api/upload`,

@@ -10,6 +10,7 @@ router.post('/', auth, validate(v.createStory), createStory);
 router.get('/', auth, getStories);
 router.put('/:id/view', auth, viewStory);
 router.get('/:id/viewers', auth, getViewers);
+router.put('/:id/like', auth, toggleStoryLike);
 router.delete('/:id', auth, deleteStory);
 
 module.exports = router;

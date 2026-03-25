@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Eye, Trash2, Type, Check, AtSign } from 'lucide-react';
+import { Plus, X, Eye, Trash2, Type, Check, AtSign, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { API } from '../../../utils/api';
@@ -122,6 +122,23 @@ function StoryRow() {
   const markViewed = async (storyId) => {
     const token = localStorage.getItem('token');
     await fetch(API.stories.view(storyId), { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+  };
+
+  const handleStoryLike = async (storyId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(API.stories.like(storyId), {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setGroups(prev => prev.map(g => ({
+          ...g,
+          stories: g.stories.map(s => s._id === storyId ? { ...s, likes: json.data } : s)
+        })));
+      }
+    } catch (err) { console.error(err); }
   };
 
   const nextStory = () => {
@@ -325,6 +342,13 @@ function StoryRow() {
               <span className="story-user-name">{currentStory.user?.username}</span>
               <span className="story-time">{Math.round((Date.now() - new Date(currentStory.createdAt)) / 3600000)}h</span>
               <div className="story-header-actions">
+                <button 
+                  className={`story-like-btn ${currentStory.likes?.includes(user?.id || user?._id) ? 'liked' : ''}`}
+                  onClick={() => handleStoryLike(currentStory._id)}
+                >
+                  <Heart size={20} fill={currentStory.likes?.includes(user?.id || user?._id) ? 'currentColor' : 'none'} color="white" />
+                  {currentStory.likes?.length > 0 && <span className="story-like-count">{currentStory.likes.length}</span>}
+                </button>
                 {isOwner && (
                   <>
                     <button onClick={() => fetchViewers(currentStory._id)} title="viewers">

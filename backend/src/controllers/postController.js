@@ -189,4 +189,38 @@ const getSavedPosts = catchAsync(async (req, res) => {
   sendResponse(res, 200, user.savedPosts.reverse());
 });
 
-module.exports = { createPost, getPosts, getFeed, likePost, addComment, deletePost, deleteComment, savePost, getSavedPosts };
+const toggleCommentLike = catchAsync(async (req, res) => {
+  const { id: postId, commentId } = req.params;
+  const post = await Post.findById(postId);
+  if (!post) throw new ApiError(404, 'Post not found');
+
+  const comment = post.comments.id(commentId);
+  if (!comment) throw new ApiError(404, 'Comment not found');
+
+  const isLiked = comment.likes.includes(req.user.id);
+  if (isLiked) {
+    comment.likes = comment.likes.filter(id => id.toString() !== req.user.id);
+  } else {
+    comment.likes.push(req.user.id);
+    if (comment.user.toString() !== req.user.id) {
+      const notif = await Notification.create({
+        recipient: comment.user,
+        sender: req.user.id,
+        type: 'like',
+        post: post._id,
+        text: `liked your comment: ${comment.text.substring(0, 20)}...`
+      });
+      const io = req.app.get('io');
+      const socketId = getReceiverSocketId(comment.user.toString());
+      if (socketId) {
+        const populated = await notif.populate('sender', 'username avatar');
+        io.to(socketId).emit('newNotification', populated);
+      }
+    }
+  }
+
+  await post.save();
+  sendResponse(res, 200, comment.likes);
+});
+
+module.exports = { createPost, getPosts, getFeed, likePost, addComment, deletePost, deleteComment, savePost, getSavedPosts, toggleCommentLike };
