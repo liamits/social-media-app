@@ -306,6 +306,18 @@ function StoryRow() {
               </div>
             )}
 
+            {/* Render selected tags as badges in editor */}
+            {tags.length > 0 && !showTagSelector && (
+              <div className="story-editor-tags">
+                {tags.map(tag => (
+                  <span key={tag._id} className="story-tag-badge">
+                    @{tag.username}
+                    <button type="button" onClick={() => setTags(prev => prev.filter(t => t._id !== tag._id))}><X size={12} /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+
             {/* Publish button */}
             <button className="story-publish-btn" onClick={handlePublish}>
               Share story

@@ -181,7 +181,19 @@ function Sidebar() {
         }}>
           <div className="search-panel" onClick={e => e.stopPropagation()}>
             <header className="search-header">
-              <h2>Search</h2>
+              <div className="search-header-top">
+                <h2>Search</h2>
+                <button 
+                  className="close-search-btn" 
+                  onClick={() => {
+                    setShowSearch(false);
+                    setSearchQuery('');
+                    setSearchResults([]);
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
               <div className="search-input-container">
                 <input 
                   type="text" 

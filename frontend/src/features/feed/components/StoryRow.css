@@ -490,3 +490,67 @@
   backdrop-filter: blur(4px);
   text-decoration: none;
 }
+
+.story-editor-tags {
+  position: absolute;
+  bottom: 80px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  z-index: 5;
+}
+
+.story-tag-badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.story-tag-badge button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+}
+
+.story-tag-badge button:hover {
+  opacity: 1;
+}
+
+.story-like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.story-like-btn.liked {
+  color: #ed4956;
+}
+
+.story-like-btn:hover {
+  transform: scale(1.1);
+}
+
+.story-like-count {
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
