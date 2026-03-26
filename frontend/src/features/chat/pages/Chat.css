@@ -182,6 +182,14 @@
   padding: 8px 12px;
   border-radius: 18px;
   font-size: 14px;
+  position: relative;
+}
+
+.message-bubble.post-msg {
+  padding: 0;
+  overflow: hidden;
+  max-width: 280px;
+  border: 1px solid var(--border-color);
 }
 
 .message-bubble.sent {
@@ -223,4 +231,48 @@
 .input-icons {
   display: flex;
   gap: 12px;
+}
+
+/* Shared Post Styles */
+.shared-post-content {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  width: 100%;
+}
+
+.shared-post-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.shared-post-info {
+  padding: 12px;
+  background-color: var(--bg-color);
+}
+
+.shared-post-user {
+  font-weight: 600;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.shared-post-caption {
+  font-size: 13px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.message-bubble.sent.post-msg {
+  background-color: var(--bg-secondary);
+}
+
+.message-bubble.received.post-msg {
+  background-color: var(--bg-secondary);
 }

@@ -13,7 +13,16 @@ const messageSchema = new mongoose.Schema({
   },
   message: {
     type: String,
-    required: true
+    required: function() { return this.type === 'text'; }
+  },
+  type: {
+    type: String,
+    enum: ['text', 'post'],
+    default: 'text'
+  },
+  postId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post'
   }
 }, { timestamps: true });
 

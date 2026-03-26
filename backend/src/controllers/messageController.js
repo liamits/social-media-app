@@ -6,7 +6,7 @@ const ApiError = require('../common/ApiError');
 const { sendResponse } = require('../common/response');
 
 const sendMessage = catchAsync(async (req, res) => {
-  const { message } = req.body;
+  const { message, postId, type = 'text' } = req.body;
   const { id: receiverId } = req.params;
   const senderId = req.user.id;
 
@@ -15,9 +15,14 @@ const sendMessage = catchAsync(async (req, res) => {
     conversation = await Conversation.create({ participants: [senderId, receiverId] });
   }
 
-  const newMessage = new Message({ senderId, receiverId, message });
+  const newMessage = new Message({ senderId, receiverId, message, postId, type });
   conversation.messages.push(newMessage._id);
   await Promise.all([conversation.save(), newMessage.save()]);
+
+  // Populate postId for socket if it's a post message
+  if (type === 'post') {
+    await newMessage.populate('postId', 'images caption');
+  }
 
   const socketId = getReceiverSocketId(receiverId);
   if (socketId) {
@@ -27,6 +32,8 @@ const sendMessage = catchAsync(async (req, res) => {
       senderId: newMessage.senderId.toString(),
       receiverId: newMessage.receiverId.toString(),
       message: newMessage.message,
+      type: newMessage.type,
+      postId: newMessage.postId,
       createdAt: newMessage.createdAt,
       updatedAt: newMessage.updatedAt,
     });
@@ -41,7 +48,10 @@ const getMessages = catchAsync(async (req, res) => {
 
   const conversation = await Conversation.findOne({
     participants: { $all: [senderId, userToChatId] },
-  }).populate('messages');
+  }).populate({
+    path: 'messages',
+    populate: { path: 'postId', select: 'images caption user', populate: { path: 'user', select: 'username avatar' } }
+  });
 
   sendResponse(res, 200, conversation ? conversation.messages : []);
 });

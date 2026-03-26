@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSocket } from '../../../context/SocketContext';
 import { useAuth } from '../../../context/AuthContext';
+import { Link } from 'react-router-dom';
 import { Info, Image as ImageIcon, Heart, Smile, MessageCircle } from 'lucide-react';
 import { API } from '../../../utils/api';
 import './Chat.css';
@@ -151,11 +152,24 @@ function Chat() {
             </header>
 
             <div className="messages-area">
-              {messages.map((msg, i) => (
-                <div key={msg._id || i} className={`message-bubble ${msg.senderId?.toString() === currentUser?.id ? 'sent' : 'received'}`}>
-                  {msg.message}
-                </div>
-              ))}
+              {messages.map((msg, i) => {
+                const isSent = msg.senderId?.toString() === currentUser?.id;
+                return (
+                  <div key={msg._id || i} className={`message-bubble ${isSent ? 'sent' : 'received'} ${msg.type === 'post' ? 'post-msg' : ''}`}>
+                    {msg.type === 'post' && msg.postId ? (
+                      <Link to={`/profile/${msg.postId.user?.username}`} className="shared-post-content">
+                        <img src={msg.postId.images?.[0] || msg.postId.image} alt="Shared post" className="shared-post-img" />
+                        <div className="shared-post-info">
+                          <span className="shared-post-user">{msg.postId.user?.username}</span>
+                          <p className="shared-post-caption">{msg.postId.caption}</p>
+                        </div>
+                      </Link>
+                    ) : (
+                      msg.message
+                    )}
+                  </div>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 

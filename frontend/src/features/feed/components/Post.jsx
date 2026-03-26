@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { API } from '../../../utils/api';
 import TagSelector from '../../../components/common/TagSelector';
 import EditPostModal from './EditPostModal';
+import SharePostModal from './SharePostModal';
 import './Post.css';
 
 function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
@@ -20,6 +21,7 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
   const [commentTags, setCommentTags] = useState([]);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const menuRef = useRef();
@@ -226,7 +228,9 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
           <button className="action-btn" data-test-id="post-comment-btn" onClick={() => inputRef.current?.focus()}>
             <MessageCircle size={24} />
           </button>
-          <button className="action-btn"><Send size={24} /></button>
+          <button className="action-btn" onClick={() => setIsShareModalOpen(true)}>
+            <Send size={24} />
+          </button>
         </div>
         <button className={`action-btn ${isSaved ? 'saved' : ''}`} onClick={toggleSave} data-test-id="post-save-btn">
           <Bookmark size={24} fill={isSaved ? 'currentColor' : 'none'} />
@@ -321,6 +325,11 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
         onClose={() => setIsEditModalOpen(false)} 
         post={post} 
         onSuccess={handleEditSuccess} 
+      />
+      <SharePostModal 
+        post={post} 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
       />
     </article>
   );
