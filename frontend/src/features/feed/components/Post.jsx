@@ -3,7 +3,7 @@ import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Trash2, AtSign, X
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { API } from '../../../utils/api';
-import TagSelector from '../../../components/common/TagSelector';
+import EmojiPickerBtn from '../../../components/common/EmojiPickerBtn';
 import EditPostModal from './EditPostModal';
 import SharePostModal from './SharePostModal';
 import './Post.css';
@@ -309,6 +309,7 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
           </div>
         )}
         <div className="comment-input-row">
+          <EmojiPickerBtn onEmojiSelect={(emoji) => setCommentText(prev => prev + emoji)} />
           <input
             ref={inputRef}
             type="text"

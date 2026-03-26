@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Image as ImageIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { API } from '../../../utils/api';
 import TagSelector from '../../../components/common/TagSelector';
+import EmojiPickerBtn from '../../../components/common/EmojiPickerBtn';
 import './CreatePostModal.css';
 
 function CreatePostModal({ isOpen, onClose, onSuccess }) {
@@ -157,12 +158,15 @@ function CreatePostModal({ isOpen, onClose, onSuccess }) {
                 </button>
               </div>
               <div className="post-details">
-                <textarea
-                  placeholder="Write a caption..."
-                  value={caption}
-                  onChange={e => setCaption(e.target.value)}
-                  maxLength={2200}
-                />
+                <div className="caption-wrapper">
+                  <textarea
+                    placeholder="Write a caption..."
+                    value={caption}
+                    onChange={e => setCaption(e.target.value)}
+                    maxLength={2200}
+                  />
+                  <EmojiPickerBtn onEmojiSelect={(emoji) => setCaption(prev => prev + emoji)} />
+                </div>
                 <input
                   type="text"
                   placeholder="Add location"

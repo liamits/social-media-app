@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { X, Heart, Bookmark, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API } from '../../utils/api';
+import EmojiPickerBtn from './EmojiPickerBtn';
 import './PostModal.css';
 
 function PostModal({ post: initialPost, onClose, onDelete }) {
@@ -174,6 +175,7 @@ function PostModal({ post: initialPost, onClose, onDelete }) {
 
           {/* Comment input */}
           <form className="post-modal-comment-form" onSubmit={handleCommentSubmit}>
+            <EmojiPickerBtn onEmojiSelect={(emoji) => setCommentText(prev => prev + emoji)} />
             <input
               type="text"
               placeholder="Add a comment..."

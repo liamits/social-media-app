@@ -1,0 +1,30 @@
+.emoji-picker-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.emoji-trigger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.emoji-trigger-btn:hover {
+  color: var(--text-primary);
+}
+
+.emoji-picker-popup {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  border-radius: 12px;
+  overflow: hidden;
+}

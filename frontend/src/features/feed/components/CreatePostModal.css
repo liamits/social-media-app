@@ -192,3 +192,21 @@
   font-size: 12px;
   margin-top: 5px;
 }
+
+.caption-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.caption-wrapper .emoji-picker-wrapper {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+}
+
+.caption-wrapper .emoji-picker-popup {
+  bottom: calc(100% + 4px);
+  left: auto;
+  right: 0;
+}
