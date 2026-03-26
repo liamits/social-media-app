@@ -96,13 +96,17 @@ const likePost = catchAsync(async (req, res) => {
 });
 
 const addComment = catchAsync(async (req, res) => {
-  const { text, tags } = req.body;
+  const { text, tags, parentId } = req.body;
   const post = await Post.findById(req.params.id);
   if (!post) throw new ApiError(404, 'Post not found');
 
-  post.comments.push({ user: req.user.id, text, tags });
+  const newComment = { user: req.user.id, text, tags, parentId };
+  post.comments.push(newComment);
   await post.save();
 
+  const commentId = post.comments[post.comments.length - 1]._id;
+
+  // 1. Notify post owner (always)
   if (post.user.toString() !== req.user.id) {
     const notif = await Notification.create({ recipient: post.user, sender: req.user.id, type: 'comment', post: post._id, text: text.substring(0, 50) });
     const io = req.app.get('io');
@@ -113,7 +117,27 @@ const addComment = catchAsync(async (req, res) => {
     }
   }
 
-  // Handle tagged users in comments
+  // 2. Notify parent comment owner (if nested)
+  if (parentId) {
+    const parentComment = post.comments.id(parentId);
+    if (parentComment && parentComment.user.toString() !== req.user.id && parentComment.user.toString() !== post.user.toString()) {
+      const notif = await Notification.create({ 
+        recipient: parentComment.user, 
+        sender: req.user.id, 
+        type: 'comment', 
+        post: post._id, 
+        text: `replied to your comment: ${text.substring(0, 30)}...` 
+      });
+      const io = req.app.get('io');
+      const socketId = getReceiverSocketId(parentComment.user.toString());
+      if (socketId) {
+        const populated = await notif.populate('sender', 'username avatar');
+        io.to(socketId).emit('newNotification', populated);
+      }
+    }
+  }
+
+  // 3. Handle tagged users in comments
   if (tags && tags.length > 0) {
     const io = req.app.get('io');
     for (const tagId of tags) {

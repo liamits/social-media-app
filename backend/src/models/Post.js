@@ -32,6 +32,10 @@ const postSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }],
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null
+    },
     createdAt: {
       type: Date,
       default: Date.now

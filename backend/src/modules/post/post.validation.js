@@ -21,6 +21,7 @@ const addComment = {
   body: Joi.object({
     text: Joi.string().min(1).required(),
     tags: Joi.array().items(Joi.string()).optional(),
+    parentId: Joi.string().hex().length(24).allow(null).optional(),
   }),
 };
 

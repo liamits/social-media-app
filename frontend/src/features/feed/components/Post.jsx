@@ -20,7 +20,9 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
   const [commentTags, setCommentTags] = useState([]);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
   const menuRef = useRef();
+  const inputRef = useRef();
 
   const isOwner = user?.id === post.user?._id?.toString() || user?.id === post.user?.id;
 
@@ -62,6 +64,12 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
     }
   };
 
+  const handleReply = (comment) => {
+    setReplyTo({ id: comment._id, username: comment.user.username });
+    setCommentText(`@${comment.user.username} `);
+    inputRef.current?.focus();
+  };
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
@@ -70,13 +78,18 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
       const res = await fetch(API.posts.comment(post._id), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ text: commentText, tags: commentTags.map(t => t._id) }),
+        body: JSON.stringify({ 
+          text: commentText, 
+          tags: commentTags.map(t => t._id),
+          parentId: replyTo?.id
+        }),
       });
       const json = await res.json();
       if (res.ok) { 
         setComments(json.data.comments); 
         setCommentText(''); 
         setCommentTags([]);
+        setReplyTo(null);
         setShowTagSelector(false);
       }
     } catch (err) { console.error(err); }
@@ -127,6 +140,9 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
     }
   };
 
+  const rootComments = comments.filter(c => !c.parentId);
+  const getReplies = (parentId) => comments.filter(c => c.parentId === parentId);
+
   return (
     <article className="post">
       <header className="post-header">
@@ -168,12 +184,15 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
           <button className={`action-btn ${isLiked ? 'liked' : ''}`} onClick={toggleLike} data-test-id="post-like-btn">
             <Heart size={24} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
-          <button className="action-btn" data-test-id="post-comment-btn"><MessageCircle size={24} /></button>
+          <button className="action-btn" data-test-id="post-comment-btn" onClick={() => inputRef.current?.focus()}>
+            <MessageCircle size={24} />
+          </button>
           <button className="action-btn"><Send size={24} /></button>
         </div>
         <button className={`action-btn ${isSaved ? 'saved' : ''}`} onClick={toggleSave} data-test-id="post-save-btn">
           <Bookmark size={24} fill={isSaved ? 'currentColor' : 'none'} />
-        </button>      </div>
+        </button>      
+      </div>
 
       <section className="post-details">
         <p className="post-likes">{likes.length.toLocaleString()} likes</p>
@@ -189,78 +208,73 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
             </div>
           )}
         </div>
-        {comments.length > 0 && (
-          <div className="post-comments-preview">
-            {comments.slice(-2).map((comment) => (
-              <div key={comment._id} className="comment-item">
+        
+        <div className="post-comments-preview">
+          {rootComments.slice(-3).map((comment) => (
+            <div key={comment._id} className="comment-group">
+              <div className="comment-item">
                 <span className="comment-username">{comment.user?.username || 'user'}</span> 
                 {comment.text}
-                {comment.tags?.length > 0 && (
-                  <span className="comment-tags">
-                    {comment.tags.map(tag => (
-                      <Link key={tag._id} to={`/profile/${tag.username}`} className="tag-link">
-                        @{tag.username}
-                      </Link>
-                    ))}
-                  </span>
-                )}
                 <div className="comment-actions">
                   <button 
-                    className={`comment-like-btn ${comment.likes?.includes(user?.id || user?._id) ? 'liked' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); handleCommentLike(comment._id); }}
+                    className={`comment-mini-btn ${comment.likes?.includes(user?.id) ? 'liked' : ''}`}
+                    onClick={() => handleCommentLike(comment._id)}
                   >
-                    <Heart size={12} fill={comment.likes?.includes(user?.id || user?._id) ? 'currentColor' : 'none'} />
-                    {comment.likes?.length > 0 && <span>{comment.likes.length}</span>}
+                    <Heart size={12} fill={comment.likes?.includes(user?.id) ? 'currentColor' : 'none'} />
                   </button>
+                  <button className="comment-mini-btn reply" onClick={() => handleReply(comment)}>Reply</button>
                   {(user?.id === comment.user?._id?.toString() || isOwner) && (
-                    <button className="delete-comment-btn" onClick={() => handleDeleteComment(comment._id)}>
+                    <button className="comment-mini-btn delete" onClick={() => handleDeleteComment(comment._id)}>
                       <Trash2 size={12} />
                     </button>
                   )}
                 </div>
               </div>
-            ))}
-            {comments.length > 2 && (
-              <button className="view-all-comments">View all {comments.length} comments</button>
-            )}
-          </div>
-        )}
+              {getReplies(comment._id).map(reply => (
+                <div key={reply._id} className="comment-item reply">
+                  <span className="comment-username">{reply.user?.username}</span>
+                  {reply.text}
+                  <div className="comment-actions">
+                    <button 
+                      className={`comment-mini-btn ${reply.likes?.includes(user?.id) ? 'liked' : ''}`}
+                      onClick={() => handleCommentLike(reply._id)}
+                    >
+                      <Heart size={12} fill={reply.likes?.includes(user?.id) ? 'currentColor' : 'none'} />
+                    </button>
+                    {(user?.id === reply.user?._id?.toString() || isOwner) && (
+                      <button className="comment-mini-btn delete" onClick={() => handleDeleteComment(reply._id)}>
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+          {rootComments.length > 3 && (
+            <button className="view-all-comments">View all {comments.length} comments</button>
+          )}
+        </div>
         <p className="post-time">{formatDate(post.createdAt)}</p>
       </section>
 
       <form className="post-comment-input" onSubmit={handleCommentSubmit}>
-        {commentTags.length > 0 && (
-          <div className="selected-comment-tags">
-            {commentTags.map(tag => (
-              <span key={tag._id} className="comment-tag-badge">
-                @{tag.username}
-                <button type="button" onClick={() => setCommentTags(prev => prev.filter(t => t._id !== tag._id))}><X size={12} /></button>
-              </span>
-            ))}
+        {replyTo && (
+          <div className="reply-indicator">
+            Replying to @{replyTo.username}
+            <button type="button" onClick={() => setReplyTo(null)}><X size={12} /></button>
           </div>
         )}
-        <input
-          type="text"
-          placeholder="Add a comment..."
-          value={commentText}
-          onChange={e => setCommentText(e.target.value)}
-          data-test-id="post-comment-input"
-        />
-        <button 
-          type="button" 
-          className="comment-tag-btn" 
-          onClick={() => setShowTagSelector(v => !v)}
-          title="Tag friends"
-        >
-          <AtSign size={18} />
-        </button>
-        {showTagSelector && (
-          <div className="comment-tag-panel">
-            <TagSelector selectedTags={commentTags} onTagsChange={setCommentTags} />
-            <button type="button" className="done-tag-btn" onClick={() => setShowTagSelector(false)}>Done</button>
-          </div>
-        )}
-        <button type="submit" className="post-btn" disabled={!commentText.trim() && commentTags.length === 0} data-test-id="post-comment-submit-btn">Post</button>
+        <div className="comment-input-row">
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Add a comment..."
+            value={commentText}
+            onChange={e => setCommentText(e.target.value)}
+          />
+          <button type="submit" className="post-btn" disabled={!commentText.trim()}>Post</button>
+        </div>
       </form>
 
       <EditPostModal 
