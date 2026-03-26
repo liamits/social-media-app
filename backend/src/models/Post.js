@@ -8,8 +8,8 @@ const postSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    required: true
   },
+  images: [String],
   caption: {
     type: String,
     default: ''

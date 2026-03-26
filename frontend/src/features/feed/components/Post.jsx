@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Trash2, AtSign, X, Edit2 } from 'lucide-react';
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Trash2, AtSign, X, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { API } from '../../../utils/api';
@@ -21,8 +21,21 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const menuRef = useRef();
   const inputRef = useRef();
+
+  const images = post.images?.length > 0 ? post.images : [post.image];
+
+  const nextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex(prev => (prev < images.length - 1 ? prev + 1 : prev));
+  };
+
+  const prevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : prev));
+  };
 
   const isOwner = user?.id === post.user?._id?.toString() || user?.id === post.user?.id;
 
@@ -174,8 +187,34 @@ function Post({ post: initialPost, onDelete, savedPostIds = [] }) {
         )}
       </header>
 
-      <div className="post-image" onDoubleClick={handleDoubleTap}>
-        <img src={post.image} alt="Post content" />
+      <div className="post-image-container" onDoubleClick={handleDoubleTap}>
+        <div className="post-carousel" style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}>
+          {images.map((src, i) => (
+            <div key={i} className="carousel-slide">
+              <img src={src} alt={`Post content ${i + 1}`} />
+            </div>
+          ))}
+        </div>
+        
+        {images.length > 1 && (
+          <>
+            {currentImageIndex > 0 && (
+              <button className="carousel-nav prev" onClick={prevImage}>
+                <ChevronLeft size={20} />
+              </button>
+            )}
+            {currentImageIndex < images.length - 1 && (
+              <button className="carousel-nav next" onClick={nextImage}>
+                <ChevronRight size={20} />
+              </button>
+            )}
+            <div className="carousel-indicators">
+              {images.map((_, i) => (
+                <span key={i} className={`indicator-dot ${i === currentImageIndex ? 'active' : ''}`} />
+              ))}
+            </div>
+          </>
+        )}
         {showHeartAnim && <div className="heart-anim">❤️</div>}
       </div>
 

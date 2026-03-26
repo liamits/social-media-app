@@ -2,7 +2,8 @@ const Joi = require('joi');
 
 const createPost = {
   body: Joi.object({
-    image: Joi.string().uri().required(),
+    image: Joi.string().optional(),
+    images: Joi.array().items(Joi.string()).min(1).optional(),
     caption: Joi.string().allow('').optional(),
     location: Joi.string().allow('').optional(),
     tags: Joi.array().items(Joi.string()).optional(),

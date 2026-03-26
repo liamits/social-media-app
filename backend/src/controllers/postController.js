@@ -7,11 +7,25 @@ const ApiError = require('../common/ApiError');
 const { sendResponse } = require('../common/response');
 
 const createPost = catchAsync(async (req, res) => {
-  const { image, caption, location, tags } = req.body;
-  const post = new Post({ user: req.user.id, image, caption, location, tags });
-  await post.save();
+  const { caption, location, tags, images } = req.body;
+  let { image } = req.body;
 
-  // Send notifications to tagged users
+  if (images && images.length > 0) {
+    image = images[0];
+  } else if (image) {
+    req.body.images = [image];
+  }
+
+  const post = await Post.create({
+    user: req.user.id,
+    image,
+    images: req.body.images || [image],
+    caption,
+    location,
+    tags
+  });
+
+  // Notifications for tagged users
   if (tags && tags.length > 0) {
     const io = req.app.get('io');
     for (const tagId of tags) {
@@ -26,11 +40,10 @@ const createPost = catchAsync(async (req, res) => {
     }
   }
 
-  await post.populate([
-    { path: 'user', select: 'username avatar fullName' },
-    { path: 'tags', select: 'username avatar' }
-  ]);
-  sendResponse(res, 201, post);
+  const populated = await Post.findById(post._id)
+    .populate('user', 'username avatar fullName')
+    .populate('tags', 'username avatar');
+  sendResponse(res, 201, populated);
 });
 
 const getPosts = catchAsync(async (req, res) => {
@@ -104,9 +117,7 @@ const addComment = catchAsync(async (req, res) => {
   post.comments.push(newComment);
   await post.save();
 
-  const commentId = post.comments[post.comments.length - 1]._id;
-
-  // 1. Notify post owner (always)
+  // Notifications
   if (post.user.toString() !== req.user.id) {
     const notif = await Notification.create({ recipient: post.user, sender: req.user.id, type: 'comment', post: post._id, text: text.substring(0, 50) });
     const io = req.app.get('io');
@@ -117,37 +128,15 @@ const addComment = catchAsync(async (req, res) => {
     }
   }
 
-  // 2. Notify parent comment owner (if nested)
   if (parentId) {
     const parentComment = post.comments.id(parentId);
     if (parentComment && parentComment.user.toString() !== req.user.id && parentComment.user.toString() !== post.user.toString()) {
-      const notif = await Notification.create({ 
-        recipient: parentComment.user, 
-        sender: req.user.id, 
-        type: 'comment', 
-        post: post._id, 
-        text: `replied to your comment: ${text.substring(0, 30)}...` 
-      });
+      const notif = await Notification.create({ recipient: parentComment.user, sender: req.user.id, type: 'comment', post: post._id, text: `replied to your comment: ${text.substring(0, 30)}...` });
       const io = req.app.get('io');
       const socketId = getReceiverSocketId(parentComment.user.toString());
       if (socketId) {
         const populated = await notif.populate('sender', 'username avatar');
         io.to(socketId).emit('newNotification', populated);
-      }
-    }
-  }
-
-  // 3. Handle tagged users in comments
-  if (tags && tags.length > 0) {
-    const io = req.app.get('io');
-    for (const tagId of tags) {
-      if (tagId.toString() !== req.user.id) {
-        const notif = await Notification.create({ recipient: tagId, sender: req.user.id, type: 'tag', post: post._id, text: `tagged you in a comment: ${text.substring(0, 30)}...` });
-        const socketId = getReceiverSocketId(tagId.toString());
-        if (socketId) {
-          const populated = await notif.populate('sender', 'username avatar');
-          io.to(socketId).emit('newNotification', populated);
-        }
       }
     }
   }
@@ -226,21 +215,6 @@ const toggleCommentLike = catchAsync(async (req, res) => {
     comment.likes = comment.likes.filter(id => id.toString() !== req.user.id);
   } else {
     comment.likes.push(req.user.id);
-    if (comment.user.toString() !== req.user.id) {
-      const notif = await Notification.create({
-        recipient: comment.user,
-        sender: req.user.id,
-        type: 'like',
-        post: post._id,
-        text: `liked your comment: ${comment.text.substring(0, 20)}...`
-      });
-      const io = req.app.get('io');
-      const socketId = getReceiverSocketId(comment.user.toString());
-      if (socketId) {
-        const populated = await notif.populate('sender', 'username avatar');
-        io.to(socketId).emit('newNotification', populated);
-      }
-    }
   }
 
   await post.save();
@@ -248,45 +222,39 @@ const toggleCommentLike = catchAsync(async (req, res) => {
 });
 
 const updatePost = catchAsync(async (req, res) => {
-  const { caption, location, tags } = req.body;
+  const { caption, location, tags, images } = req.body;
   const post = await Post.findById(req.params.id);
 
   if (!post) throw new ApiError(404, 'Post not found');
-  if (post.user.toString() !== req.user.id) throw new ApiError(403, 'Unauthorized');
+  if (post.user.toString() !== req.user.id) throw new ApiError(403, 'Forbidden');
 
-  const oldTags = post.tags.map(id => id.toString());
-  
+  if (images && images.length > 0) {
+    post.images = images;
+    post.image = images[0];
+  }
+
   if (caption !== undefined) post.caption = caption;
   if (location !== undefined) post.location = location;
   if (tags !== undefined) post.tags = tags;
 
   await post.save();
 
-  // Send notifications to NEW tagged users
-  if (tags && tags.length > 0) {
-    const newTags = tags.filter(tagId => !oldTags.includes(tagId.toString()));
-    if (newTags.length > 0) {
-      const io = req.app.get('io');
-      for (const tagId of newTags) {
-        if (tagId.toString() !== req.user.id) {
-          const notif = await Notification.create({ recipient: tagId, sender: req.user.id, type: 'tag', post: post._id });
-          const socketId = getReceiverSocketId(tagId.toString());
-          if (socketId) {
-            const populated = await notif.populate('sender', 'username avatar');
-            io.to(socketId).emit('newNotification', populated);
-          }
-        }
-      }
-    }
-  }
-
-  await post.populate([
-    { path: 'user', select: 'username avatar fullName' },
-    { path: 'tags', select: 'username avatar' },
-    { path: 'comments.user', select: 'username avatar' }
-  ]);
-  
-  sendResponse(res, 200, post, 'Post updated successfully');
+  const updated = await Post.findById(post._id)
+    .populate('user', 'username avatar fullName')
+    .populate('tags', 'username avatar');
+  sendResponse(res, 200, updated);
 });
 
-module.exports = { createPost, getPosts, getFeed, likePost, addComment, deletePost, deleteComment, savePost, getSavedPosts, toggleCommentLike, updatePost };
+module.exports = { 
+  createPost, 
+  getPosts, 
+  getFeed, 
+  likePost, 
+  addComment, 
+  deletePost, 
+  deleteComment, 
+  savePost, 
+  getSavedPosts, 
+  toggleCommentLike, 
+  updatePost 
+};
