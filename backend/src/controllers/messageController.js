@@ -6,7 +6,7 @@ const ApiError = require('../common/ApiError');
 const { sendResponse } = require('../common/response');
 
 const sendMessage = catchAsync(async (req, res) => {
-  const { message, postId, type = 'text' } = req.body;
+  const { message, postId, type = 'text', mediaUrl } = req.body;
   const { id: receiverId } = req.params;
   const senderId = req.user.id;
 
@@ -15,11 +15,10 @@ const sendMessage = catchAsync(async (req, res) => {
     conversation = await Conversation.create({ participants: [senderId, receiverId] });
   }
 
-  const newMessage = new Message({ senderId, receiverId, message, postId, type });
+  const newMessage = new Message({ senderId, receiverId, message, postId, type, mediaUrl });
   conversation.messages.push(newMessage._id);
   await Promise.all([conversation.save(), newMessage.save()]);
 
-  // Populate postId for socket if it's a post message
   if (type === 'post') {
     await newMessage.populate('postId', 'images caption');
   }
@@ -33,6 +32,7 @@ const sendMessage = catchAsync(async (req, res) => {
       receiverId: newMessage.receiverId.toString(),
       message: newMessage.message,
       type: newMessage.type,
+      mediaUrl: newMessage.mediaUrl,
       postId: newMessage.postId,
       createdAt: newMessage.createdAt,
       updatedAt: newMessage.updatedAt,

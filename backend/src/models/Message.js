@@ -17,9 +17,10 @@ const messageSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['text', 'post'],
+    enum: ['text', 'post', 'image', 'gif', 'video'],
     default: 'text'
   },
+  mediaUrl: { type: String },
   postId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post'
