@@ -14,6 +14,7 @@ function Chat() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [hoveredMsg, setHoveredMsg] = useState(null);
+  const [openReactionPicker, setOpenReactionPicker] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [conversations, setConversations] = useState([]);
   const [loadingConv, setLoadingConv] = useState(true);
@@ -24,6 +25,7 @@ function Chat() {
   const { user: currentUser } = useAuth();
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef();
+  const reactionPickerRef = useRef();
 
   useEffect(() => {
     if (!userIdFromQuery) return;
@@ -92,6 +94,17 @@ function Chat() {
     socket.on('newMessage', handleNewMessage);
     return () => socket.off('newMessage', handleNewMessage);
   }, [socket, selectedUser]);
+
+  useEffect(() => {
+    if (!openReactionPicker) return;
+    const handler = (e) => {
+      if (reactionPickerRef.current && !reactionPickerRef.current.contains(e.target)) {
+        setOpenReactionPicker(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [openReactionPicker]);
 
   useEffect(() => {
     if (!socket) return;
@@ -287,22 +300,27 @@ function Chat() {
                 const QUICK_EMOJIS = ['❤️','😂','😮','😢','😡','👍'];
                 return (
                   <React.Fragment key={msg._id || i}>
-                    <div
-                      className={`message-bubble-wrapper ${isSent ? 'sent' : 'received'}`}
-                      onMouseEnter={() => setHoveredMsg(msg._id)}
-                      onMouseLeave={() => setHoveredMsg(null)}
-                    >
+                    <div className={`message-bubble-wrapper ${isSent ? 'sent' : 'received'}`}>
+                      {/* Nút 3 chấm dọc */}
+                      <button
+                        className="reaction-trigger-btn"
+                        onClick={() => setOpenReactionPicker(openReactionPicker === msg._id ? null : msg._id)}
+                        title="React"
+                      >⋮</button>
+
                       <div className={`message-bubble ${isSent ? 'sent' : 'received'} ${msg.type === 'post' ? 'post-msg' : ''} ${['image','gif','video'].includes(msg.type) ? 'media-msg' : ''}`}>
                         {renderMessageContent(msg)}
                       </div>
-                      {/* Reaction picker on hover */}
-                      {hoveredMsg === msg._id && (
-                        <div className={`reaction-picker ${isSent ? 'sent' : 'received'}`}>
+
+                      {/* Reaction picker - hiện khi click ⋮ */}
+                      {openReactionPicker === msg._id && (
+                        <div className={`reaction-picker ${isSent ? 'sent' : 'received'}`} ref={reactionPickerRef}>
                           {QUICK_EMOJIS.map(e => (
                             <button key={e} className="reaction-emoji-btn" onClick={() => handleReact(msg._id, e)}>{e}</button>
                           ))}
                         </div>
                       )}
+
                       {/* Existing reactions */}
                       {msg.reactions?.length > 0 && (
                         <div className={`reaction-list ${isSent ? 'sent' : 'received'}`}>

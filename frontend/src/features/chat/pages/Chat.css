@@ -388,13 +388,15 @@
 /* Message bubble wrapper for reaction hover */
 .message-bubble-wrapper {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
   position: relative;
   margin-bottom: 2px;
 }
 
-.message-bubble-wrapper.sent { align-items: flex-end; }
-.message-bubble-wrapper.received { align-items: flex-start; }
+.message-bubble-wrapper.sent { flex-direction: row-reverse; align-items: center; }
+.message-bubble-wrapper.received { flex-direction: row; align-items: center; }
 
 /* Quick reaction picker */
 .reaction-picker {
@@ -452,4 +454,31 @@
 .reaction-count {
   font-size: 11px;
   color: var(--text-secondary);
+}
+
+/* Reaction trigger button (⋮) */
+.message-bubble-wrapper {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.message-bubble-wrapper.sent { flex-direction: row-reverse; }
+
+.reaction-trigger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 16px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.message-bubble-wrapper:hover .reaction-trigger-btn {
+  opacity: 1;
 }
