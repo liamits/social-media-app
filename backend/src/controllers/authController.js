@@ -31,4 +31,17 @@ const login = catchAsync(async (req, res) => {
   sendResponse(res, 200, { token, user: { id: user._id, username: user.username, email: user.email, fullName: user.fullName, avatar: user.avatar } });
 });
 
-module.exports = { register, login };
+const getMe = catchAsync(async (req, res) => {
+  const user = await User.findById(req.user.id).select('-password');
+  if (!user) throw new ApiError(404, 'User not found');
+  sendResponse(res, 200, {
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    fullName: user.fullName,
+    avatar: user.avatar,
+    bio: user.bio,
+  });
+});
+
+module.exports = { register, login, getMe };
