@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Search, PlusSquare, Send, User, Tv2 } from 'lucide-react-native';
+import { Home, Search, PlusSquare, Heart, User } from 'lucide-react-native';
 
 import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
 import FeedScreen from '../screens/FeedScreen';
+import ExploreScreen from '../screens/ExploreScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import MessagesScreen from '../screens/MessagesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
@@ -20,27 +22,23 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarStyle: {
-          backgroundColor: '#000',
-          borderTopColor: '#222',
-          height: 56,
-        },
+        tabBarStyle: { backgroundColor: '#000', borderTopColor: '#222', height: 56 },
         tabBarActiveTintColor: '#fff',
-        tabBarInactiveTintColor: '#888',
-        tabBarIcon: ({ color, size }) => {
-          const s = size - 2;
+        tabBarInactiveTintColor: '#666',
+        tabBarIcon: ({ color }) => {
+          const s = 24;
           if (route.name === 'Feed') return <Home size={s} color={color} />;
-          if (route.name === 'Reels') return <Tv2 size={s} color={color} />;
+          if (route.name === 'Explore') return <Search size={s} color={color} />;
           if (route.name === 'Create') return <PlusSquare size={s} color={color} />;
-          if (route.name === 'Messages') return <Send size={s} color={color} />;
+          if (route.name === 'Notifications') return <Heart size={s} color={color} />;
           if (route.name === 'Profile') return <User size={s} color={color} />;
         },
       })}
     >
       <Tab.Screen name="Feed" component={FeedScreen} />
-      <Tab.Screen name="Reels" component={FeedScreen} />
+      <Tab.Screen name="Explore" component={ExploreScreen} />
       <Tab.Screen name="Create" component={FeedScreen} />
-      <Tab.Screen name="Messages" component={FeedScreen} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

@@ -4,17 +4,17 @@ import {
   StyleSheet, ActivityIndicator, RefreshControl,
   ScrollView, SafeAreaView, StatusBar,
 } from 'react-native';
-import { Heart, MessageCircle, Send, Bookmark, Plus, MoreHorizontal } from 'lucide-react-native';
+import { Heart, MessageCircle, Send, Bookmark, Plus, MoreHorizontal, PenSquare } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { API } from '../api/api';
 
-function Header() {
+function Header({ navigation }) {
   return (
     <View style={styles.header}>
       <Text style={styles.headerLogo}>Instagram</Text>
       <View style={styles.headerRight}>
         <TouchableOpacity style={styles.headerBtn}>
-          <Heart size={24} color="#fff" />
+          <PenSquare size={24} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.headerBtn}>
           <Send size={24} color="#fff" />
