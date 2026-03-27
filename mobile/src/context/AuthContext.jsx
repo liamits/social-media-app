@@ -46,10 +46,15 @@ export const AuthProvider = ({ children }) => {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message);
-    await AsyncStorage.setItem('token', json.data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(json.data.user));
-    setToken(json.data.token);
-    setUser(json.data.user);
+    const tk = json.data.token;
+    // Fetch full user profile after login
+    const meRes = await fetch(API.auth.me, { headers: { Authorization: `Bearer ${tk}` } });
+    const meJson = await meRes.json();
+    const fullUser = meRes.ok ? meJson.data : json.data.user;
+    await AsyncStorage.setItem('token', tk);
+    await AsyncStorage.setItem('user', JSON.stringify(fullUser));
+    setToken(tk);
+    setUser(fullUser);
   };
 
   const logout = async () => {

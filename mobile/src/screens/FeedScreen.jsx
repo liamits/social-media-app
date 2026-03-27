@@ -33,7 +33,8 @@ function StoryRow({ currentUser, token }) {
       .catch(() => {});
   }, [token]);
 
-  const avatarUri = currentUser?.avatar || 'https://ui-avatars.com/api/?name=U&background=555&color=fff';
+  const avatarUri = currentUser?.avatar || null;
+  const initials = (currentUser?.username || 'U')[0].toUpperCase();
 
   return (
     <ScrollView
@@ -42,10 +43,15 @@ function StoryRow({ currentUser, token }) {
       style={styles.storyRow}
       contentContainerStyle={{ paddingHorizontal: 8 }}
     >
-      {/* Your story */}
       <TouchableOpacity style={styles.storyItem}>
         <View style={styles.yourStoryWrapper}>
-          <Image source={{ uri: avatarUri }} style={styles.storyAvatar} />
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.storyAvatar} />
+          ) : (
+            <View style={[styles.storyAvatar, styles.avatarFallback]}>
+              <Text style={styles.avatarInitial}>{initials}</Text>
+            </View>
+          )}
           <View style={styles.addBadge}>
             <Plus size={12} color="#fff" strokeWidth={3} />
           </View>
@@ -231,6 +237,8 @@ const styles = StyleSheet.create({
   storyRow: { backgroundColor: '#000', paddingVertical: 12, borderBottomWidth: 0.3, borderBottomColor: '#333' },
   storyItem: { alignItems: 'center', marginHorizontal: 8, width: 72 },
   storyAvatar: { width: 62, height: 62, borderRadius: 31 },
+  avatarFallback: { backgroundColor: '#444', alignItems: 'center', justifyContent: 'center' },
+  avatarInitial: { color: '#fff', fontSize: 22, fontWeight: '700' },
   yourStoryWrapper: { position: 'relative' },
   addBadge: {
     position: 'absolute', bottom: 0, right: 0,
