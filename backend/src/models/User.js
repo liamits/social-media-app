@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   fullName: { type: String },
-  avatar: { type: String, default: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Default' },
+  avatar: { type: String, default: 'https://res.cloudinary.com/djx14arnq/image/upload/v1774602464/social-app/default_avatar.jpg' },
   bio: { type: String, default: '' },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
