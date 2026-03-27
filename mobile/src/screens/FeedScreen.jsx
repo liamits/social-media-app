@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, FlatList, Text, Image, TouchableOpacity,
   StyleSheet, ActivityIndicator, RefreshControl,
-  ScrollView, SafeAreaView, StatusBar,
+  ScrollView, SafeAreaView, StatusBar, Modal,
+  TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { Heart, MessageCircle, Send, Bookmark, Plus, MoreHorizontal, SquarePen } from 'lucide-react-native';
+import { Heart, MessageCircle, Send, Bookmark, Plus, MoreHorizontal, SquarePen, X } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { API } from '../api/api';
 
@@ -71,10 +72,82 @@ function StoryRow({ currentUser, token }) {
   );
 }
 
-function PostItem({ post, currentUserId, token }) {
+function CommentModal({ visible, post, token, currentUser, onClose }) {
+  const [comments, setComments] = useState(post?.comments || []);
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => { setComments(post?.comments || []); }, [post]);
+
+  const handleSend = async () => {
+    if (!text.trim()) return;
+    setSending(true);
+    try {
+      const res = await fetch(API.posts.comment(post._id), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text }),
+      });
+      const json = await res.json();
+      if (res.ok) { setComments(json.data.comments); setText(''); }
+    } catch (e) { console.error(e); }
+    setSending(false);
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={styles.commentSheet}>
+          <View style={styles.commentHeader}>
+            <Text style={styles.commentTitle}>Comments</Text>
+            <TouchableOpacity onPress={onClose}><X size={22} color="#fff" /></TouchableOpacity>
+          </View>
+          <FlatList
+            data={comments}
+            keyExtractor={(c, i) => c._id || String(i)}
+            style={{ flex: 1 }}
+            renderItem={({ item }) => (
+              <View style={styles.commentItem}>
+                <Image
+                  source={{ uri: item.user?.avatar || 'https://res.cloudinary.com/djx14arnq/image/upload/v1774602464/social-app/default_avatar.jpg' }}
+                  style={styles.commentAvatar}
+                />
+                <View style={styles.commentBody}>
+                  <Text style={styles.commentUsername}>{item.user?.username} </Text>
+                  <Text style={styles.commentText}>{item.text}</Text>
+                </View>
+              </View>
+            )}
+            ListEmptyComponent={<Text style={styles.noComments}>No comments yet</Text>}
+          />
+          <View style={styles.commentInput}>
+            <Image
+              source={{ uri: currentUser?.avatar || 'https://res.cloudinary.com/djx14arnq/image/upload/v1774602464/social-app/default_avatar.jpg' }}
+              style={styles.commentAvatar}
+            />
+            <TextInput
+              style={styles.commentTextInput}
+              placeholder="Add a comment..."
+              placeholderTextColor="#666"
+              value={text}
+              onChangeText={setText}
+              multiline
+            />
+            <TouchableOpacity onPress={handleSend} disabled={!text.trim() || sending}>
+              <Text style={[styles.postBtn, (!text.trim() || sending) && { opacity: 0.4 }]}>Post</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function PostItem({ post, currentUserId, token, currentUser }) {
   const [liked, setLiked] = useState(post.likes?.includes(currentUserId));
   const [likes, setLikes] = useState(post.likes?.length || 0);
   const [saved, setSaved] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const handleLike = async () => {
     setLiked(p => !p);
@@ -116,7 +189,7 @@ function PostItem({ post, currentUserId, token }) {
           <TouchableOpacity onPress={handleLike} style={styles.actionBtn}>
             <Heart size={26} color={liked ? '#ed4956' : '#fff'} fill={liked ? '#ed4956' : 'none'} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => setShowComments(true)}>
             <MessageCircle size={26} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn}>
@@ -138,6 +211,18 @@ function PostItem({ post, currentUserId, token }) {
           {post.caption}
         </Text>
       ) : null}
+      <TouchableOpacity onPress={() => setShowComments(true)}>
+        {post.comments?.length > 0 && (
+          <Text style={styles.viewComments}>View all {post.comments.length} comments</Text>
+        )}
+      </TouchableOpacity>
+      <CommentModal
+        visible={showComments}
+        post={post}
+        token={token}
+        currentUser={currentUser}
+        onClose={() => setShowComments(false)}
+      />
     </View>
   );
 }
@@ -202,7 +287,7 @@ export default function FeedScreen() {
         data={posts}
         keyExtractor={item => item._id}
         renderItem={({ item }) => (
-          <PostItem post={item} currentUserId={user?.id} token={token} />
+          <PostItem post={item} currentUserId={user?.id} token={token} currentUser={user} />
         )}
         ListHeaderComponent={
           <>
@@ -270,5 +355,23 @@ const styles = StyleSheet.create({
   postActionsLeft: { flexDirection: 'row' },
   actionBtn: { marginRight: 14 },
   postLikes: { color: '#fff', fontWeight: '600', fontSize: 13, paddingHorizontal: 12, marginBottom: 4 },
-  postCaption: { color: '#fff', fontSize: 13, paddingHorizontal: 12, paddingBottom: 8 },
+  postCaption: { color: '#fff', fontSize: 13, paddingHorizontal: 12, paddingBottom: 4 },
+  viewComments: { color: '#888', fontSize: 13, paddingHorizontal: 12, paddingBottom: 8 },
+
+  // Comment modal
+  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  commentSheet: { backgroundColor: '#1a1a1a', borderTopLeftRadius: 16, borderTopRightRadius: 16, height: '70%' },
+  commentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 0.3, borderBottomColor: '#333' },
+  commentTitle: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  commentItem: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 16, paddingVertical: 10 },
+  commentAvatar: { width: 32, height: 32, borderRadius: 16, marginRight: 10 },
+  commentBody: { flex: 1, flexDirection: 'row', flexWrap: 'wrap' },
+  commentUsername: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  commentText: { color: '#fff', fontSize: 13 },
+  noComments: { color: '#666', textAlign: 'center', marginTop: 30 },
+  commentInput: { flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 0.3, borderTopColor: '#333' },
+  commentTextInput: { flex: 1, color: '#fff', fontSize: 14, marginHorizontal: 10, maxHeight: 80 },
+  postBtn: { color: '#0095f6', fontWeight: '700', fontSize: 14 },
 });
+
+// append styles - these will be merged via spread in the StyleSheet below
